@@ -1,0 +1,73 @@
+[netease]
+    product_key = "a2869674571f77b5a0867c3d71db5856"
+    [netease.article]
+        list = "https://3g.163.com/touch/reconstruct/article/list/%(feed_id)s/%(offset)d-%(limit)d.html"
+        comment = "http://comment.api.163.com/api/v1/products/%(product_key)s/threads/%(article_id)s/comments/%(type)sList?offset=%(offset)d&limit=%(limit)d"
+    [netease.feed]
+        edu = "BA8FF5PRwangning"
+        ent = "BA10TA81wangning"
+        finance = "BA8EE5GMwangning"
+        tech = "BA8D4A3Rwangning"
+        world = "BD29MJTVwangning"
+
+
+[sohu]
+# page从1开始
+    public = ['finance', 'world']
+    integration = ['edu', 'ent', 'tech']
+    author = "https://m.sohu.com/media/%(author_id)s"
+
+    [sohu.article]
+        url = "https://m.sohu.com/a/%(article_id)s_%(author_id)s"
+        comment = "https://api.interaction.sohu.com/api/comments/maincomments?source_id=mp_%(article_id)s&page_no=%(page)d&page_size=%(size)d&reply_count=%(size)d&type=0"    # reply_countz暂时没发现有啥用，type=0为热评，1为最新评论
+        [sohu.article.list]
+            public = "http://v2.sohu.com/public-api/feed?scene=%(scene)s&sceneId=%(scene_id)s&page=%(page)d&size=%(size)d"
+            integration = "http://v2.sohu.com/integration-api/mix/region/%(region)s?page=%(page)d&size=%(size)d"
+    [sohu.feed]
+        # [sohu.feed.edu]               # pc
+            # scene = "CHANNEL"
+            # scene_id = 25
+        # [sohu.feed.tech]              # pc
+            # scene = "CHANNEL"
+            # scene_id = 30
+        [sohu.feed.finance]             # 移动&PC 新闻类别
+            scene = "CATEGORY"
+            scene_id = 1463
+        [sohu.feed.world]               # 移动&PC 新闻类别
+            scene = "CATEGORY"
+            scene_id = 1461
+        [sohu.feed.edu]                 # 移动
+            region = 96
+        [sohu.feed.ent]                 # PC
+            region = 131                # PC端为131，移动端首页没有feed流
+        [sohu.feed.tech]                # 移动
+            region = 101            
+        # [sohu.feed.finance]
+            # region = 94     # PC端为82，移动端为94
+    [sohu.category]
+        "96" = "edu"
+        "131" = "ent"
+        "101" = "tech"
+        "1463" = "finance"
+        "1461" = "world"
+
+
+[tencent]
+    ext = ['edu', 'ent', 'finance', 'tech', 'world']
+    kuaibao = 'http://kuaibao.qq.com/s/%(id)s00'
+    author = "https://new.qq.com/omn/author/%(author_id)s"
+
+    [tencent.article]
+        list = "https://pacaio.match.qq.com/xw/site?ext=%(ext)s&page=%(page)d&num=%(num)d"
+        comment = "https://coral.qq.com/article/%(comment_id)s/comment?commentid=%(last)s&tag=&reqnum=%(reqnum)d"
+# type 1:文章 2:图片
+
+
+[toutiao]
+    categories = ['edu', 'ent', 'finance', 'tech', 'world']
+    tags = ['news_edu', 'news_entertainment', 'news_finance', 'news_tech', 'news_world']
+    user = "https://www.toutiao.com/c/user/%(user_id)s/"
+    [toutiao.article]
+        url = "https://www.toutiao.com/a%(article_id)s/"
+        list = "https://m.toutiao.com/list/?tag=%(tag)s&ac=wap&count=20&format=json_raw&as=%(as)s&cp=%(cp)s&max_behot_time=%(mbt)d"
+        comment = "https://www.toutiao.com/api/comment/list/?group_id=%(group_id)s&item_id=%(item_id)s&offset=%(offset)d&count=%(count)d"

@@ -1,0 +1,27 @@
+[[source]]
+# url = "https://pypi.org/simple"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+click = "*"
+pymongo = "*"
+requests = "*"
+scrapy = "*"
+scrapy-redis = "*"
+scrapy-splash = "*"
+toml = "*"
+scrapyd-client = "*"
+python-scrapyd-api = "*"
+setuptools = "*"
+setuptools-git = "*"
+fake-useragent = "*"
+
+[dev-packages]
+scrapyd = "*"
+scrapyd-client = "*"
+python-scrapyd-api = "*"
+
+[requires]
+python_version = "3.7"
