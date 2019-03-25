@@ -12,9 +12,9 @@ CATEGORIES = ['edu', 'ent', 'finance', 'tech', 'world']
 SITES = ['netease', 'sohu', 'tencent', 'toutiao']
 
 
-TARGET, PROJECT = 'dev', NAME
+TARGET, PROJECT = 'local', NAME
 DEPLOY = {
-    'dev': {
+    'local': {
         'wscrape': 'http://localhost:6800/',
     },
 }
@@ -22,7 +22,7 @@ DEPLOY = {
 scrapyd = None
 
 
-@click.group(help='cli for crawler')
+@click.group(help='A CLI for Crawler')
 def cfc():
     pass
 
@@ -148,7 +148,7 @@ def list_(projects, project, jobs, spiders, versions):
 @scrapyd_.command(help='schedule a job to run')
 @click.option('-p', '--project', default=PROJECT, show_default=True, help='project name')
 @click.argument('spider')
-@click.option('-s', '--settings', default=None, help='a dict of scrapy settings keys you wish to override for this run')
+@click.option('-s', '--settings', default=None, help='an optional dict of scrapy settings keys you wish to override for this run')
 def schedule(project, spider, settings):
     job_id = scrapyd.schedule(project, spider, settings)
     click.secho(job_id, fg='green')

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import requests
+from . import defaults
 from scrapy.downloadermiddlewares.httpproxy import HttpProxyMiddleware
 
 class RandomHttpProxyMiddleware(HttpProxyMiddleware):
@@ -12,8 +13,8 @@ class RandomHttpProxyMiddleware(HttpProxyMiddleware):
 
     @classmethod
     def from_crawler(cls, crawler):
-        auth_encoding = crawler.settings.get('HTTPPROXY_AUTH_ENCODING')
-        url_random = crawler.settings.get("HTTPPROXY_URL_RANDOM", "http://localhost:6001/random")
+        auth_encoding = crawler.settings.get('HTTPPROXY_AUTH_ENCODING', defaults.HTTPPROXY_AUTH_ENCODING)
+        url_random = crawler.settings.get("HTTPPROXY_URL_RANDOM", defaults.HTTPPROXY_URL_RANDOM)
         return cls(auth_encoding, url_random)
 
     def process_request(self, request, spider):

@@ -17,6 +17,7 @@ python-scrapyd-api = "*"
 setuptools = "*"
 setuptools-git = "*"
 fake-useragent = "*"
+scrapy-prometheus-exporter = "*"
 
 [dev-packages]
 scrapyd = "*"

@@ -19,13 +19,12 @@ NEWSPIDER_MODULE = 'wscrape.spiders'
 #USER_AGENT = 'wscrape (+http://www.yourdomain.com)'
 
 # UserAgent type for fake-useragent
-UA_TYPE = 'random'
+# UA_TYPE = 'random'
 
 # The backup useragent
-USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14 AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+# USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14 AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36'
 
 # Obey robots.txt rules
-# ROBOTSTXT_OBEY = True
 ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
@@ -47,7 +46,7 @@ DOWNLOAD_TIMEOUT = 60   # 1 min
 # If the spider remains open for more than that number of second, 
 # it will be automatically closed with the reason closespider_timeout. 
 # If zero (or non set), spiders won’t be closed by timeout.
-CLOSESPIDER_TIMEOUT = 300   # 3mins
+# CLOSESPIDER_TIMEOUT = 1800   # 30mins
 
 # Disable cookies (enabled by default)
 COOKIES_ENABLED = False
@@ -67,7 +66,14 @@ DNSCACHE_ENABLED = True
 
 # http proxy
 HTTPPROXY_URL_RANDOM = "http://localhost:6001/random"
-HTTPPROXY_AUTH_ENCODING = "latin-1"
+# HTTPPROXY_AUTH_ENCODING = "latin-1"
+
+# stats collector
+STATS_CLASS = 'scraprom.exporter.PromStatsCollector'
+DOWNLOADER_STATS = True
+RETRY_ENABLED = True
+MMEUSAGE_ENABLED = True
+DEPTH_STATS_VERBOSE = True
 
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
@@ -86,9 +92,9 @@ DOWNLOADER_MIDDLEWARES = {
 
 # Enable or disable extensions
 # See https://doc.scrapy.org/en/latest/topics/extensions.html
-#EXTENSIONS = {
+EXTENSIONS = {
 #    'scrapy.extensions.telnet.TelnetConsole': None,
-#}
+}
 
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
@@ -119,7 +125,7 @@ ITEM_PIPELINES = {
 
 
 # ---------------- scrapy-splash ----------------------
-SPLASH_URL = 'localhost:8050'
+# SPLASH_URL = 'localhost:8050'
 
 
 # ----------------- scrapy-redis -----------------------
@@ -128,7 +134,7 @@ SPLASH_URL = 'localhost:8050'
 SCHEDULER = "wscrape.bloom_scrapy_redis.scheduler.BloomScheduler"
 
 # Ensure all spiders share same duplicates filter through redis.
-DUPEFILTER_CLASS = "wscrape.bloom_scrapy_redis.dupefilter.BloomDupeFilter"
+DUPEFILTER_CLASS = "wscrape.bloom_scrapy_redis.dupefilter.BloomFilter"
 
 # Settings for Bloom Filter
 # BLOOM_FILTER_BITS = 20

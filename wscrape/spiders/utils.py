@@ -23,8 +23,12 @@ def get_ts(str_time):
     if re.match(r'\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}', str_time):
         f = '%Y-%m-%d %H:%M:%S'
         ta = time.strptime(str_time, f)
-        ts = int(time.mktime(ta))
+        ts = int(time.mktime(ta))   # in seconds
     return ts
+
+def get_priority():
+    pass
+
 
 def show():
     print(__package__)

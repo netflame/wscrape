@@ -7,7 +7,7 @@ from . import defaults
 from .utils import SeedUtil
 
 
-class BloomDupeFilter(RFPDupeFilter):
+class BloomFilter(RFPDupeFilter):
     """
         误判率 f 最低时，有
             k = (m/n)*ln2 ≈ 0.7*m/n
@@ -54,6 +54,10 @@ class BloomDupeFilter(RFPDupeFilter):
             self.insert(fp)
             return False
         return True
+
+    def log(self, request, spider):
+        super().log(request, spider)
+        spider.crawler.stats.inc_value('dupefilter/filtered', spider=spider)
 
     def exists(self, value):
         flags = self.mget(value)
