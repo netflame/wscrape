@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from ..sites import (
-    NeteaseSpider,
-    SohuSpider,
-    TencentSpider,
-    ToutiaoSpider,
-)
+from wscrape.spiders.sites import *
 
 
 class EntTencentSpider(TencentSpider):

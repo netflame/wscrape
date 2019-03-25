@@ -14,6 +14,7 @@ class User(scrapy.Item):
     name = scrapy.Field()
     url = scrapy.Field()
 
+    gender = scrapy.Field()
     type_ = scrapy.Field()
     region = scrapy.Field()
 
@@ -23,7 +24,7 @@ class Author(User):
     pass
 
 
-class Comment(scrapy.Field):
+class Comment(scrapy.Item):
     id = scrapy.Field()
     user = scrapy.Field()
     content = scrapy.Field()
@@ -34,7 +35,7 @@ class Comment(scrapy.Field):
     comments_id = scrapy.Field()
 
 
-class Comments(scrapy.Field):
+class Comments(scrapy.Item):
     id = scrapy.Field()             # 主键，选用文章id
     url = scrapy.Field()            # comment 启始url
     count = scrapy.Field()          # 评论数量
@@ -52,7 +53,6 @@ class NewsFeedItem(scrapy.Item):
     url = scrapy.Field()            # 文章url
     genre = scrapy.Field()          # 文章类型   （可能被移除）
     publish_time = scrapy.Field()   # 发布时间
-    behot_time = scrapy.Field()     # 上次更新时间 (可能被移除)
     
     # comments_count = scrapy.Field()  # 评论数目，作为冗余
 

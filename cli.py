@@ -8,6 +8,8 @@ from scrapyd_api import ScrapydAPI
 from wscrape import NAME
 
 
+# TODO: 硬编码问题
+
 CATEGORIES = ['edu', 'ent', 'finance', 'tech', 'world']
 SITES = ['netease', 'sohu', 'tencent', 'toutiao']
 
@@ -26,13 +28,15 @@ scrapyd = None
 def cfc():
     pass
 
+@cfc.group(name='local', help='run local scrapy commands')
+def scrapy_():
+    pass
 
-@cfc.command(name='list', help='list spiders')
+@scrapy_.command(name='list', help='list spiders')
 def show():
     cmdline.execute('scrapy list'.split())
 
-
-@cfc.command(help='crawl `spider`')
+@scrapy_.command(help='crawl `spider`')
 @click.option('-c', '--category', type=click.Choice(['all']+CATEGORIES), default='all', show_default=True, help='type of crawler')
 @click.option('-s', '--site', type=click.Choice(['all']+SITES), default='all', show_default=True, help='site to be crawled')
 def crawl(category, site):
@@ -66,7 +70,7 @@ async def _crawl(spider):
     cmdline.execute(cmds.split())
 
 
-@cfc.group(name='sd', help='scrapyd commands')
+@cfc.group(name='remote', help='run remote scrapyd commands')
 def scrapyd_():
     pass
 

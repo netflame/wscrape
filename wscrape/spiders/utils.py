@@ -7,6 +7,9 @@ import toml
 from pkgutil import get_data
 from wscrape.spiders import __package__
 
+# used by scrapy.http.Request
+PRIORITY_TOP = 1000
+PRIORITY_UNIT = 100
 
 def get_config(name=None, file='config.toml'):
     # config_path = join(split(abspath(__file__))[0], file)
@@ -26,9 +29,18 @@ def get_ts(str_time):
         ts = int(time.mktime(ta))   # in seconds
     return ts
 
-def get_priority():
-    pass
-
+def get_priority(comments_count=None, view_count=None):
+        """
+        以 PRIORITY_UNIT 为一个单元， priority 最高不超过 PRIORITY_TOP
+        comments_count、view_count 权重比定为 2:8
+        """
+        base = 10
+        if comments_count is None:
+            comments_count, base = 0, 8
+        if view_count is None:
+            view_count, base = 0, 2
+        priority = (comments_count * 2 + view_count * 8) // base // PRIORITY_UNIT
+        return min(priority, PRIORITY_TOP)
 
 def show():
     print(__package__)

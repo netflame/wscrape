@@ -1,0 +1,4 @@
+1. 将localhost改为相关地址
+2. 定时爬取（使用airflow）
+3. scraprom 绑定到外部的 server
+4. scraprom 中获取到spider名字

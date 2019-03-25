@@ -3,7 +3,7 @@
 
 from scrapy.http import Request
 from scrapy_redis.spiders import RedisSpider
-from .utils import get_config
+from .utils import get_config, PRIORITY_TOP
 
 
 class BaseSpider(RedisSpider):
@@ -24,5 +24,8 @@ class BaseSpider(RedisSpider):
         init_config()
         return obj
 
-    def make_request_dont_filter(self, url):
-        return Request(url, dont_filter=True)
+    def make_base_request(self, url):
+        return Request(url, dont_filter=True, priority=PRIORITY_TOP+1)
+    
+    def errback(self, failure):
+        self.logger.error(repr(failure))

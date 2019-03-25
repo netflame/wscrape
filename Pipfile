@@ -1,6 +1,6 @@
 [[source]]
-# url = "https://pypi.org/simple"
-url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+url = "https://pypi.org/simple"
+# url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
 verify_ssl = true
 name = "pypi"
 
@@ -17,7 +17,7 @@ python-scrapyd-api = "*"
 setuptools = "*"
 setuptools-git = "*"
 fake-useragent = "*"
-scrapy-prometheus-exporter = "*"
+scraprom = "*"
 
 [dev-packages]
 scrapyd = "*"

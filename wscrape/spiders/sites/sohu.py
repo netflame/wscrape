@@ -8,6 +8,7 @@ from scrapy.http import Request
 from scrapy_redis.spiders import RedisSpider
 from wscrape.items import User, Author, Comment, Comments, NewsDetailItem
 from wscrape.spiders.base import BaseSpider
+from wscrape.spiders.utils import get_priority
 
 
 __all__ = ['SohuSpider']
@@ -55,8 +56,7 @@ class SohuSpider(BaseSpider):
             # yield scrapy.Request(url, callback=self.parse, errback=self.errback, meta={"page": page})
         
         for url in start_urls:
-            # yield Request(url, callback=self.parse, errback=self.errback)
-            yield self.make_request_dont_filter(url)
+            yield self.make_base_request(url)
 
     def parse(self, response):
         resp = json.loads(response.text)
@@ -73,63 +73,73 @@ class SohuSpider(BaseSpider):
             feed_id = ''
         category = self._get_category(feed_id)
         
+        # get pv
+        article_ids = ','.join(map(str, [d['id'] for d in data]))
+        pv_url = self.config['article']['pv'] % {'article_ids': article_ids}
+        r = requests.get(pv_url)
+        article_pvs = r.json() if r.status_code==200 else {}
+
         for d in data:
             # 跳过广告
             if "adps" in d:
                 continue
 
-            item = NewsDetailItem()
-            item['id'] = d['id']
-            item['category'] = category
-            item['source'] = 'sohu'
+            article = NewsDetailItem()
+            article['id'] = d['id']
+            article['category'] = category
+            article['source'] = 'sohu'
 
-            item['title'] = d['title']
-            # item['abstract'] = ''
+            article['title'] = d['title']
 
-            item['url'] = self.config['article']['url'] % {'article_id': d['id'], 'author_id': d['authorId']}
-            item['genre'] = d['type']
-            item['publish_time'] = d['publicTime'] // 1000
+            article['url'] = self.config['article']['url'] % {'article_id': d['id'], 'author_id': d['authorId']}
+            article['genre'] = d['type']
+            article['publish_time'] = d['publicTime'] // 1000
 
-            item['comments_id'] = item['id']
+            article['view_count'] = article_pvs.get(str(article['id']), 0)
+
+            article['comments_id'] = article['id']
 
             author = Author()
             author['id'] = d['authorId']
             author['name'] = d['authorName']
             author['url'] = self.config['author'] % {'author_id': author['id']}
-            item['author'] = author
+            article['author'] = author
 
-            item['tags'] = ';'.join([t['name'] for t in d['tags']]) if d.get('tags', None) else ''
+            article['tags'] = ';'.join([t['name'] for t in d['tags']]) if d.get('tags', None) else ''
 
-            yield Request(item['url'], callback=self.parse_article, errback=self.errback, meta={'item': item})
+            priority = get_priority(view_count=article['view_count'])
+            meta = {'article': article, 'priority': priority}
+            yield Request(article['url'], callback=self.parse_article, errback=self.errback, priority=priority, meta=meta)
 
         r = re.search(r'page=(\d+)', response.request.url)
         page = int(r.group(1))
         request_url = response.request.url.replace('page=%d' % page, 'page=%d' % (page+1))
-        # yield Request(request_url, callback=self.parse)
-        yield self.make_request_dont_filter(request_url)
+        yield self.make_base_request(request_url)
 
     def parse_article(self, response):
-        item = response.meta['item']
+        article = response.meta['article']
 
-        item['abstract'] = response.css('meta[name="description"]::attr("content")').extract_first()
-        item['keywords'] = response.css('meta[name="keywords"]::attr("content")').extract_first()
-        item['content'] = '\n'.join(p.strip() for p in response.css('#articleContent p::text').extract())
+        article['abstract'] = response.css('meta[name="description"]::attr("content")').extract_first()
+        article['keywords'] = response.css('meta[name="keywords"]::attr("content")').extract_first()
+        article['content'] = '\n'.join(p.strip() for p in response.css('#articleContent p::text').extract())
 
-        comment_url = self.config['article']['comment'] % {'article_id': item['id'], 'page': 1, 'size': self.size}
+        comment_url = self.config['article']['comment'] % {'article_id': article['id'], 'page': 1, 'size': self.size}
         r = requests.get(comment_url)
         comments_count = r.json()['data']['totalCount'] if r.status_code==200 else 0
 
-        item['comments_count'] = comments_count
-        yield item
+        article['comments_count'] = comments_count
+        yield article
 
         comments = Comments()
-        comments['id'] = item['comments_id']
+        comments['id'] = article['comments_id']
         comments['url'] = comment_url
         comments['count'] = comments_count
         comments['comments'] = []
         yield comments
 
-        yield Request(comment_url, callback=self.parse_comment, meta={'comments_id': comments['id']}) # , meta={'article_id': article_id})
+        priority = response.meta['priority']
+        meta = {'comments_id': comments['id'], 'priority': priority}
+        yield Request(comment_url, callback=self.parse_comment, priority=response.meta['priority'], meta=meta)
 
     def parse_comment(self, response):
 
@@ -163,10 +173,8 @@ class SohuSpider(BaseSpider):
         r = re.search(r'page_no=(\d+)', response.request.url)
         page = int(r.group(1))
         request_url = response.request.url.replace('page_no=%d' % page, 'page_no=%d' % (page+1))
-        yield Request(request_url, callback=self.parse_comment, meta={'comments_id': comments_id})
+        yield Request(request_url, callback=self.parse_comment, priority=response.meta['priority'], meta=response.meta)
     
-    def errback(self, failure):
-        self.logger.error(repr(failure))
 
     def _get_category(self, feed_id):
         return self.config['category'].get(feed_id, "Unknown")

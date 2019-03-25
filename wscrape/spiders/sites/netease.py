@@ -8,7 +8,7 @@ from scrapy.http import Request
 from scrapy_redis.spiders import RedisSpider
 from wscrape.items import User, Author, Comment, Comments, NewsDetailItem
 from wscrape.spiders.base import BaseSpider
-from ..utils import get_ts
+from wscrape.spiders.utils import get_ts, get_priority
 
 __all__ = ['NeteaseSpider']
 
@@ -33,7 +33,7 @@ class NeteaseSpider(BaseSpider):
                 self.config['article']['list'] % {'feed_id': self.config['feed'].get(self.category), 'offset': 0, 'limit': self.limit},
             ]
         for url in start_urls:
-            yield self.make_request_dont_filter(url)
+            yield self.make_base_request(url)
     
     def parse(self, response):
         text = response.text
@@ -56,27 +56,27 @@ class NeteaseSpider(BaseSpider):
                 if d['docid'] not in url:   # 忽略该类url
                     continue
 
-                item = NewsDetailItem()
-                item['id'] = d['docid']
-                item['category'] = category
-                item['source'] = 'netease'
+                article = NewsDetailItem()
+                article['id'] = d['docid']
+                article['category'] = category
+                article['source'] = 'netease'
             
-                item['title'] = d['title']
-                item['abstract'] = d['digest']
+                article['title'] = d['title']
+                article['abstract'] = d['digest']
 
-                item['url'] = d['url']
-                # item['genre']
-                item['publish_time'] = get_ts(d['ptime'])
-                # item['behot_time']
+                article['url'] = d['url']
+                article['publish_time'] = get_ts(d['ptime'])
 
-                item['comments_count'] = d['commentCount']
-                item['comments_id'] = item['id']
+                article['comments_count'] = d['commentCount']
+                article['comments_id'] = article['id']
 
                 author = Author()
                 author['name'] = d['source']
-                item['author'] = author
+                article['author'] = author
 
-                yield Request(item['url'], callback=self.parse_article, meta={'item': item})
+                priority = get_priority(comments_count=article['comments_count'])
+                meta = {'article': article, 'priority': priority}
+                yield Request(article['url'], callback=self.parse_article, priority=priority, meta=meta)
         except JSONDecodeError:
             # 描述或者title中有双引号
             pass
@@ -86,34 +86,36 @@ class NeteaseSpider(BaseSpider):
             return
         offset, limit = int(r.group(1)), int(r.group(2))
         request_url = response.request.url.replace('%d-%d.html' % (offset, limit), '%d-%d.html' % (offset+limit, limit))
-        yield self.make_request_dont_filter(request_url)
+        yield self.make_base_request(request_url)
 
     # 采用传递item来一次yield item
     def parse_article(self, response):
-        item = response.meta['item']
+        article = response.meta['article']
 
-        item['genre'] = response.css('meta[property="og:type"]::attr("content")').extract_first()
-        item['keywords'] = response.css('meta[name="keyword"]::attr("content")').extract_first()
-        item['tags'] = response.css('meta[property="article:tag"]::attr("content")').extract_first()
+        article['genre'] = response.css('meta[property="og:type"]::attr("content")').extract_first()
+        article['keywords'] = response.css('meta[name="keyword"]::attr("content")').extract_first()
+        article['tags'] = response.css('meta[property="article:tag"]::attr("content")').extract_first()
 
         abstract = response.css('meta[property="og:description"]::attr("content")').extract_first()
-        if not item['abstract']:
-            item['abstract'] = abstract
+        if not article['abstract']:
+            article['abstract'] = abstract
 
-        item['content'] = '\n'.join([p.strip() for p in response.css('div.page.js-page p::text').extract()])
+        article['content'] = '\n'.join([p.strip() for p in response.css('div.page.js-page p::text').extract()])
 
-        yield item
+        yield article
 
-        comment_url = self.config['article']['comment'] % {'product_key': self.config['product_key'], 'article_id': item['id'], 'type': 'new', 'offset': 0, 'limit': self.limit}
+        comment_url = self.config['article']['comment'] % {'product_key': self.config['product_key'], 'article_id': article['id'], 'type': 'new', 'offset': 0, 'limit': self.limit}
 
         comments = Comments()
-        comments['id'] = item['comments_id']
+        comments['id'] = article['comments_id']
         comments['url'] = comment_url
-        comments['count'] = item['comments_count']
+        comments['count'] = article['comments_count']
         comments['comments'] = []
         yield comments
 
-        yield Request(comment_url, callback=self.parse_comment, meta={'comments_id': comments['id']})
+        priority = response.meta['priority']
+        meta = {'comments_id': comments['id'], 'priority': priority}
+        yield Request(comment_url, callback=self.parse_comment, priority=priority, meta=meta)
 
     # 不传递item，而是根据id更新item
     def parse_comment(self, response):
@@ -134,7 +136,7 @@ class NeteaseSpider(BaseSpider):
             comment['comments_id'] = comments_id
 
             user, duser = User(), d['user']
-            user['id'] = duser['userId']
+            user['id'] = duser['userId']                    # useId为0表示该用户是匿名用户
             user['region'] = duser['location']
             user['name'] = duser.get('nickname', '')
             user['type_'] = duser.get('userType', '')
@@ -147,7 +149,8 @@ class NeteaseSpider(BaseSpider):
             return
         offset, limit = int(r.group(1)), int(r.group(2))
         request_url = response.url.replace("offset=%d" % offset, "offset=%d" % (offset+limit))
-        yield Request(request_url, self.parse_comment, meta={'comments_id': comments_id})
+        priority = response.meta['priority']
+        yield Request(request_url, self.parse_comment, priority=priority, meta=response.meta)
 
     def _get_category(self, feed_id):
         for k, v in self.config['feed'].items():

@@ -19,6 +19,7 @@
 
     [sohu.article]
         url = "https://m.sohu.com/a/%(article_id)s_%(author_id)s"
+        pv = "https://v2.sohu.com/public-api/articles/pv?articleIds=%(article_ids)s"
         comment = "https://api.interaction.sohu.com/api/comments/maincomments?source_id=mp_%(article_id)s&page_no=%(page)d&page_size=%(size)d&reply_count=%(size)d&type=0"    # reply_countz暂时没发现有啥用，type=0为热评，1为最新评论
         [sohu.article.list]
             public = "http://v2.sohu.com/public-api/feed?scene=%(scene)s&sceneId=%(scene_id)s&page=%(page)d&size=%(size)d"
@@ -54,7 +55,7 @@
 
 [tencent]
     ext = ['edu', 'ent', 'finance', 'tech', 'world']
-    kuaibao = 'http://kuaibao.qq.com/s/%(id)s00'
+    kuaibao = 'http://kuaibao.qq.com/s/%(id)s'
     author = "https://new.qq.com/omn/author/%(author_id)s"
 
     [tencent.article]

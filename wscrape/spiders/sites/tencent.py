@@ -6,7 +6,7 @@ import scrapy
 from scrapy.http import Request
 from wscrape.items import User, Author, Comment, Comments, NewsDetailItem
 from wscrape.spiders.base import BaseSpider
-from ..utils import get_config
+from wscrape.spiders.utils import get_priority
 
 __all__ = ['TencentSpider']
 
@@ -21,7 +21,6 @@ class TencentSpider(BaseSpider):
     config_name = 'tencent'
 
     def start_requests(self):
-        # self.config = get_config('tencent')
         if not self.ext:
             start_urls = [
                 self.config['article']['list'] % {'ext': ext, 'page': 0, 'num': self.num} for ext in self.config['ext']
@@ -31,7 +30,7 @@ class TencentSpider(BaseSpider):
                 self.config['article']['list'] % {'ext': self.ext, 'page': 0, 'num': self.num}
             ]
         for url in start_urls:
-            yield self.make_request_dont_filter(url)
+            yield self.make_base_request(url)
         
     def parse(self, response):
         text = response.text
@@ -42,60 +41,62 @@ class TencentSpider(BaseSpider):
           return  
 
         for d in data:
-            item = NewsDetailItem()
-            item['id'] = d['id']
-            item['category'] = d['category']
-            item['source'] = 'tencent'
+            article = NewsDetailItem()
+            article['id'] = d['id']
+            article['category'] = d['category']
+            article['source'] = 'tencent'
 
-            item['title'] = d['title']
-            item['abstract'] = d['intro']
+            article['title'] = d['title']
+            article['abstract'] = d['intro']
 
-            item['url'] = d['vurl']
-            item['genre'] = d['article_type']
-            item['publish_time'] = d['ts']  # d['publish_time']
+            article['url'] = d['vurl']
+            article['genre'] = d['article_type']
+            article['publish_time'] = d['ts']  # utils.get_ts(d['publish_time'])
 
-            # item['comments_id'] = d['comment_id']
-            item['comments_id'] = item['id']
-            item['comments_count'] = d['comment_num']
+            article['comments_id'] = d['comment_id']
+            # article['comments_id'] = article['id']
+            article['comments_count'] = d['comment_num']
 
             author = Author()
             author['id'] = d['source_id']
             author['name'] = d['source']
             author['url'] = self.config['author'] % {'author_id': author['id']}
-            item['author'] = author
+            article['author'] = author
 
-            item['keywords'] = d['keywords']
-            item['tags'] = d['tags']
-            item['view_count'] = d['view_count']
+            article['keywords'] = d['keywords']
+            article['tags'] = d['tags']
+            article['view_count'] = d['view_count']
 
-            if d.get('from', '') == 'kuaibao':
-                yield Request(self.config['kuaibao'] % {'id': d['app_id']}, callback=self.parse_article, meta={'item': item, 'comment_id': d['comment_id'],'flag': 1})
+            priority = get_priority(comments_count=article['comments_count'], view_count=article['view_count'])
+            meta = {'article': article, 'priority': priority}
+            if d.get('from', '') == 'kuaibao':                      # 快报 -> 主要为 ent 信息
+                yield Request(self.config['kuaibao'] % {'id': d['app_id']}, callback=self.parse_article, priority=priority, meta=meta)
             else:
-                yield Request(item['url'], callback=self.parse_article, meta={'item': item, 'comment_id': d['comment_id']})
+                yield Request(article['url'], callback=self.parse_article, priority=priority, meta=meta)
         page = re.sub(r'.*?page=(?P<page>\d+).*', r'\g<page>', response.request.url)
         request_url = response.request.url.replace('page=%s' % page, 'page=%d' % (int(page)+1))
-        yield self.make_request_dont_filter(request_url)
+        yield self.make_base_request(request_url)
 
 
     def parse_article(self, response):
-        item = response.meta['item']
-        p = 'p.text::text' if response.meta.get('flag', 0) else 'p.one-p::text'
-        item['content'] = '\n'.join(p.strip() for p in response.css(p).extract())
-        yield item
+        article = response.meta['article']
+        p = 'p.text::text'      # > 快报->p.text.textNode
+        article['content'] = '\n'.join(p.strip() for p in response.css(p).extract())
+        yield article
 
-        # comment_id = item['comments_id']
-        comment_id = response.meta['comment_id']
+        comment_id = article['comments_id']
         comment_url = self.config['article']['comment'] % {'comment_id': comment_id, 'last': 0, 'reqnum': self.num}
         
         comments = Comments()
-        # comments['id'] = comment_id
-        comments['id'] = item['comments_id']
+        comments['id'] = article['comments_id']
         comments['url'] = comment_url
-        comments['count'] = item['comments_count']
+        comments['count'] = article['comments_count']
         comments['comments'] = []
         yield comments
 
-        yield Request(comment_url, callback=self.parse_comment, meta={'comments_id': comments['id']})
+        priority = response.meta['priority']
+        meta = {'comments_id': comments['id'], 'priority': priority}
+        yield Request(comment_url, callback=self.parse_comment, priority=priority, meta=meta)
 
     def parse_comment(self, response):
 
@@ -119,6 +120,7 @@ class TencentSpider(BaseSpider):
             user['id'] = duser['userid']
             user['region'] = duser['region']
             user['name'] = duser['nick']
+            user['gender'] = duser['gender']
 
             comment['user'] = user
             yield comment
@@ -126,4 +128,4 @@ class TencentSpider(BaseSpider):
         if data['hasnext']:
             last = data['last']
             next_comment_url = re.sub(r'commentid=\w+?&', 'commentid=%s&' % last, response.request.url, 1)
-            yield Request(next_comment_url, callback=self.parse_comment, meta={'comments_id': comments_id})
+            yield Request(next_comment_url, callback=self.parse_comment, priority=response.meta['priority'], meta=response.meta)
