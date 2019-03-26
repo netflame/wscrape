@@ -69,11 +69,19 @@ HTTPPROXY_URL_RANDOM = "http://localhost:6001/random"
 # HTTPPROXY_AUTH_ENCODING = "latin-1"
 
 # stats collector
-STATS_CLASS = 'scraprom.exporter.PromStatsCollector'
 DOWNLOADER_STATS = True
 RETRY_ENABLED = True
 MMEUSAGE_ENABLED = True
 DEPTH_STATS_VERBOSE = True
+STATS_CLASS = 'scraprom.PromStatsCollector'
+
+# SCRAPROM_PUSHGATEWAY_URL = '0.0.0.0:9091'
+# SCRAPROM_JOB_NAME = ' scrapy'
+# SCRAPROM_PUSH_TIMEOUT = 3
+# SCRAPROM_UPDATE_INTERVAL = 5
+# SCRAPROM_METRICS_PREFIX = 'scraprom'
+
+
 
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
