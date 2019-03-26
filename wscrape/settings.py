@@ -76,6 +76,7 @@ DEPTH_STATS_VERBOSE = True
 STATS_CLASS = 'scraprom.PromStatsCollector'
 
 # SCRAPROM_PUSHGATEWAY_URL = '0.0.0.0:9091'
+# SCRAPROM_PUSHGATEWAY_URL = 'pushgateway:9091'
 # SCRAPROM_JOB_NAME = ' scrapy'
 # SCRAPROM_PUSH_TIMEOUT = 3
 # SCRAPROM_UPDATE_INTERVAL = 5
@@ -187,7 +188,8 @@ SCHEDULER_DUPEFILTER_KEY = '%(spider)s:bloomfilter'
 # Specify the full Redis URL for connecting (optional).
 # If set, this takes precedence over the REDIS_HOST and REDIS_PORT settings.
 #REDIS_URL = 'redis://user:pass@hostname:9001'
-REDIS_URL = 'redis://localhost:6379'    # second `redis` is the service name
+REDIS_URL = 'redis://localhost:6379'
+# REDIS_URL = 'redis://redis:6379'      # second `redis` is the service name
 
 # Custom redis client parameters (i.e.: socket timeout, etc.)
 #REDIS_PARAMS  = {}
@@ -209,6 +211,7 @@ REDIS_URL = 'redis://localhost:6379'    # second `redis` is the service name
 
 # ----------------- mongodb ------------------------
 MONGO_URI = "mongodb://localhost:27017"
+# MONGO_URI = "mongodb://mongo:27017"
 MONGO_DB = "netflame"
 
 # -------------- feed_export_encoding --------------

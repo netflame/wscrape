@@ -315,11 +315,11 @@
         },
         "scraprom": {
             "hashes": [
-                "sha256:de06762ed7c072e8c3f7a4c1d660f16961ee198386a270970e2eb035c76af9f1",
-                "sha256:e76da8c1a32ca6563a7075029747e3f80fef10a195b0f4375fc1c50a8b94767b"
+                "sha256:1243bdfd3d5776ab20a3b8d005c6626031ae0bb0d9de5b69c87c41475220134c",
+                "sha256:480554b6ea0f42a938de479e938835f3c65d38c2e3750b82c47c6df274e4355e"
             ],
             "index": "pypi",
-            "version": "==1.0.1"
+            "version": "==1.0.2"
         },
         "scrapy": {
             "hashes": [

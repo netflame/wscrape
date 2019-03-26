@@ -19,6 +19,9 @@ DEPLOY = {
     'local': {
         'wscrape': 'http://localhost:6800/',
     },
+    'remote': {
+        'wscrape': 'http://remotehost:6800',
+    }
 }
 
 scrapyd = None
