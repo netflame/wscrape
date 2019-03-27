@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 
 from scrapy.http import Request
-from scrapy_redis.spiders import RedisSpider
+# from scrapy_redis.spiders import RedisSpider
+from wscrape.bloom_scrapy_redis import CloseableRedisSpider
 from .utils import get_config, PRIORITY_TOP
 
 
-class BaseSpider(RedisSpider):
+class BaseSpider(CloseableRedisSpider):
     
     # config placeholder
     config = {}
@@ -25,7 +26,7 @@ class BaseSpider(RedisSpider):
         return obj
 
     def make_base_request(self, url):
-        return Request(url, dont_filter=True, priority=PRIORITY_TOP+1)
+        return Request(url, priority=PRIORITY_TOP+1)
     
     def errback(self, failure):
         self.logger.error(repr(failure))

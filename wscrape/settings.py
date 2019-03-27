@@ -154,6 +154,8 @@ DUPEFILTER_CLASS = "wscrape.bloom_scrapy_redis.dupefilter.BloomFilter"
 
 # BLOOM_FILTER_CHECK_KEY = '%(sdk)s:bfcheck'  # sdk -> Scheduler Dupefilter Key
 
+# SPIDER_IDLE_MAX_TIMES = 360                 # 360*5/60=30min
+
 DUPEFILTER_DEBUG = True
 SCHEDULER_DUPEFILTER_KEY = '%(spider)s:bloomfilter'
 

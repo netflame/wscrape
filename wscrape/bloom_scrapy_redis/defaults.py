@@ -13,3 +13,6 @@ BLOOM_FILTER_SEEDS = [2, 3, 5, 7, 11, 13, 15, 17]
 
 # the second key for check the inserted order of offset
 BLOOM_FILTER_CHECK_KEY = '%(sdk)s:bfcheck'
+
+# allowable max spider idle times when redis queue is empty, otherwise close spider
+SPIDER_IDLE_MAX_TIMES = 360    # 360*5s/60s=30min

@@ -11,7 +11,7 @@ from scrapy.http import Request
 from scrapy_redis.spiders import RedisSpider
 from wscrape.items import User, Author, Comment, Comments, NewsDetailItem
 from wscrape.spiders.base import BaseSpider
-from wscrape.spiders.utils import get_priority, PRIORITY_TOP
+from wscrape.spiders.utils import get_priority
 
 __all__ = ['ToutiaoSpider']
 
@@ -86,7 +86,8 @@ class ToutiaoSpider(BaseSpider):
         as_, cp = self._get_as_cp()
         mbt = data[-1]['behot_time']
         request_url = re.sub(r'as=.*?&cp=.*?&max_behot_time=\d+$', 'as=%s&cp=%s&max_behot_time=%d' % (as_, cp, mbt), response.request.url)
-        yield Request(request_url, callback=self.parse, errback=self.errback, priority=PRIORITY_TOP+1)
+        # yield Request(request_url, callback=self.parse, errback=self.errback, priority=PRIORITY_TOP+1)
+        yield self.make_base_request(request_url)
 
     def parse_article(self, response):
         article = response.meta['article']
