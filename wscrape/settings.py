@@ -65,7 +65,7 @@ DNSCACHE_ENABLED = True
 
 
 # http proxy
-HTTPPROXY_URL_RANDOM = "http://localhost:6001/random"
+HTTPPROXY_URL_RANDOM = 'http://uproxy:6001/random'
 # HTTPPROXY_AUTH_ENCODING = "latin-1"
 
 # stats collector
@@ -190,7 +190,7 @@ SCHEDULER_DUPEFILTER_KEY = '%(spider)s:bloomfilter'
 # Specify the full Redis URL for connecting (optional).
 # If set, this takes precedence over the REDIS_HOST and REDIS_PORT settings.
 #REDIS_URL = 'redis://user:pass@hostname:9001'
-REDIS_URL = 'redis://localhost:6379'
+REDIS_URL = 'redis://redis:6379'
 # REDIS_URL = 'redis://redis:6379'      # second `redis` is the service name
 
 # Custom redis client parameters (i.e.: socket timeout, etc.)
@@ -212,7 +212,7 @@ REDIS_URL = 'redis://localhost:6379'
 
 
 # ----------------- mongodb ------------------------
-MONGO_URI = "mongodb://localhost:27017"
+MONGO_URI = 'mongodb://mongo:27017'
 # MONGO_URI = "mongodb://mongo:27017"
 MONGO_DB = "netflame"
 
