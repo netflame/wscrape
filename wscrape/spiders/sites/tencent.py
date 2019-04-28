@@ -5,7 +5,7 @@ import re
 import scrapy
 from scrapy.http import Request
 from wscrape.items import User, Author, Comment, Comments, NewsDetailItem
-from wscrape.spiders.base import BaseSpider
+from wscrape.spiders.basespider import BaseSpider
 from wscrape.spiders.utils import get_priority
 
 __all__ = ['TencentSpider']
@@ -73,6 +73,8 @@ class TencentSpider(BaseSpider):
                 yield Request(self.config['kuaibao'] % {'id': d['app_id']}, callback=self.parse_article, priority=priority, meta=meta)
             else:
                 yield Request(article['url'], callback=self.parse_article, priority=priority, meta=meta)
+            
+            self._update_stats('tencent', article['category'], 'feed')
         page = re.sub(r'.*?page=(?P<page>\d+).*', r'\g<page>', response.request.url)
         request_url = response.request.url.replace('page=%s' % page, 'page=%d' % (int(page)+1))
         yield self.make_base_request(request_url)
@@ -83,6 +85,8 @@ class TencentSpider(BaseSpider):
         p = 'p.text::text'      # > 快报->p.text.textNode
         article['content'] = '\n'.join(p.strip() for p in response.css(p).extract())
         yield article
+
+        self._update_stats('tencent', article['category'], 'article')
 
         comment_id = article['comments_id']
         comment_url = self.config['article']['comment'] % {'comment_id': comment_id, 'last': 0, 'reqnum': self.num}
@@ -95,7 +99,7 @@ class TencentSpider(BaseSpider):
         yield comments
 
         priority = response.meta['priority']
-        meta = {'comments_id': comments['id'], 'priority': priority}
+        meta = {'comments_id': comments['id'], 'priority': priority, 'category': article['category']}
         yield Request(comment_url, callback=self.parse_comment, priority=priority, meta=meta)
 
     def parse_comment(self, response):
@@ -124,6 +128,8 @@ class TencentSpider(BaseSpider):
 
             comment['user'] = user
             yield comment
+
+            self._update_stats('tencent', response.meta['category'], 'comment')
 
         if data['hasnext']:
             last = data['last']

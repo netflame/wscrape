@@ -13,6 +13,9 @@ class BaseSpider(CloseableRedisSpider):
     config = {}
     config_name = ''
 
+    # white list for bloom filter
+    whitelist = set()
+
     @classmethod
     def from_crawler(self, crawler, *args, **kwargs):
 
@@ -30,3 +33,9 @@ class BaseSpider(CloseableRedisSpider):
     
     def errback(self, failure):
         self.logger.error(repr(failure))
+    
+    def parse(self, response):
+        stats = self.crawler.stats
+        
+    def _update_stats(self, site, category, type_):
+        self.crawler.stats.inc_value('%(site)s_%(category)s_%(type_)s' % {'site': site, 'category': category, 'type_': type_})

@@ -20,15 +20,17 @@ if [ $# == 0 ]; then
 fi
 
 function toLocal() {
-   sed -ir "s#^HTTPPROXY_URL_RANDOM.*#HTTPPROXY_URL_RANDOM = 'http://localhost:6001/random'#" ${settings_py} \
-   && sed -ir "s#^REDIS_URL.*#REDIS_URL = 'redis://localhost:6379'#" ${settings_py} \
-   && sed -ir "s#^MONGO_URI.*#MONGO_URI = 'mongodb://localhost:27017'#" ${settings_py}
+    sed -ir "s#^HTTPPROXY_URL_RANDOM.*#HTTPPROXY_URL_RANDOM = 'http://localhost:6001/random'#" ${settings_py} \
+    && sed -ir "s#^REDIS_URL.*#REDIS_URL = 'redis://localhost:6379'#" ${settings_py} \
+    && sed -ir "s#^MONGO_URI.*#MONGO_URI = 'mongodb://localhost:27017'#" ${settings_py} \
+    && sed -ir "s#^SCRAPROM_PUSHGATEWAY_URL.*#SCRAPROM_PUSHGATEWAY_URL = 'http://localhost:9091'#" ${settings_py}
 }
 
 function toRemote() {
     sed -ir "s#^HTTPPROXY_URL_RANDOM.*#HTTPPROXY_URL_RANDOM = 'http://uproxy:6001/random'#" ${settings_py} \
     && sed -ir "s#^REDIS_URL.*#REDIS_URL = 'redis://redis:6379'#" ${settings_py} \
-    && sed -ir "s#^MONGO_URI.*#MONGO_URI = 'mongodb://mongo:27017'#" ${settings_py}
+    && sed -ir "s#^MONGO_URI.*#MONGO_URI = 'mongodb://mongo:27017'#" ${settings_py} \
+    && sed -ir "s#^SCRAPROM_PUSHGATEWAY_URL.*#SCRAPROM_PUSHGATEWAY_URL = 'http://pushgateway:9091'#" ${settings_py}
 }
 
 while getopts ":t:p:" opt

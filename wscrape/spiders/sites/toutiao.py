@@ -10,7 +10,7 @@ import scrapy
 from scrapy.http import Request
 from scrapy_redis.spiders import RedisSpider
 from wscrape.items import User, Author, Comment, Comments, NewsDetailItem
-from wscrape.spiders.base import BaseSpider
+from wscrape.spiders.basespider import BaseSpider
 from wscrape.spiders.utils import get_priority
 
 __all__ = ['ToutiaoSpider']
@@ -83,6 +83,8 @@ class ToutiaoSpider(BaseSpider):
             meta = {'article': article, 'priority': priority}
             yield Request(article['url'], callback=self.parse_article, errback=self.errback, priority=priority, meta=meta)
 
+            self._update_stats('toutiao', category, 'feed')
+
         as_, cp = self._get_as_cp()
         mbt = data[-1]['behot_time']
         request_url = re.sub(r'as=.*?&cp=.*?&max_behot_time=\d+$', 'as=%s&cp=%s&max_behot_time=%d' % (as_, cp, mbt), response.request.url)
@@ -111,6 +113,8 @@ class ToutiaoSpider(BaseSpider):
 
         yield article
 
+        self._update_stats('toutiao', article['category'], 'article')
+
         comment_url = self.config['article']['comment'] % {'group_id': group_id, 'item_id': item_id, 'offset': 0, 'count': self.count}
         
         comments = Comments()
@@ -120,7 +124,7 @@ class ToutiaoSpider(BaseSpider):
         comments['comments'] = []
 
         priority = response.meta['priority']
-        meta = {'comments_id': comments['id'], 'priority': priority}
+        meta = {'comments_id': comments['id'], 'priority': priority, 'category': article['category']}
         yield Request(comment_url, callback=self.parse_comment, errback=self.errback, priority=priority, meta=meta)
 
     def parse_comment(self, response):
@@ -146,6 +150,8 @@ class ToutiaoSpider(BaseSpider):
             comment['user'] = user
 
             yield comment
+
+            self._update_stats('toutiao', response.meta['category'], 'comment')
 
         offset = int(re.sub(r'.*offset=(?P<offset>\d+).*', r'\g<offset>', response.url))
         request_url = response.url.replace('offset=%d' % offset, 'offset=%d' % (offset+self.count))

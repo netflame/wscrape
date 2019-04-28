@@ -5,9 +5,9 @@ import json
 import scrapy
 from json import JSONDecodeError
 from scrapy.http import Request
-from scrapy_redis.spiders import RedisSpider
+from scrapy.utils.request import request_fingerprint
 from wscrape.items import User, Author, Comment, Comments, NewsDetailItem
-from wscrape.spiders.base import BaseSpider
+from wscrape.spiders.basespider import BaseSpider
 from wscrape.spiders.utils import get_ts, get_priority
 
 __all__ = ['NeteaseSpider']
@@ -33,7 +33,9 @@ class NeteaseSpider(BaseSpider):
                 self.config['article']['list'] % {'feed_id': self.config['feed'].get(self.category), 'offset': 0, 'limit': self.limit},
             ]
         for url in start_urls:
-            yield self.make_base_request(url)
+            request = self.make_base_request(url)
+            self.whitelist.add(request_fingerprint(request))
+            yield request
     
     def parse(self, response):
         text = response.text
@@ -77,6 +79,8 @@ class NeteaseSpider(BaseSpider):
                 priority = get_priority(comments_count=article['comments_count'])
                 meta = {'article': article, 'priority': priority}
                 yield Request(article['url'], callback=self.parse_article, priority=priority, meta=meta)
+
+                self._update_stats('netease', category, 'feed')
         except JSONDecodeError:
             # 描述或者title中有双引号
             pass
@@ -86,7 +90,9 @@ class NeteaseSpider(BaseSpider):
             return
         offset, limit = int(r.group(1)), int(r.group(2))
         request_url = response.request.url.replace('%d-%d.html' % (offset, limit), '%d-%d.html' % (offset+limit, limit))
-        yield self.make_base_request(request_url)
+        base_request = self.make_base_request(request_url)
+        self.whitelist.add(request_fingerprint(base_request))
+        yield base_request
 
     # 采用传递item来一次yield item
     def parse_article(self, response):
@@ -103,6 +109,8 @@ class NeteaseSpider(BaseSpider):
         article['content'] = '\n'.join([p.strip() for p in response.css('div.page.js-page p::text').extract()])
 
         yield article
+        
+        self._update_stats('netease', article['category'], 'article')
 
         comment_url = self.config['article']['comment'] % {'product_key': self.config['product_key'], 'article_id': article['id'], 'type': 'new', 'offset': 0, 'limit': self.limit}
 
@@ -114,7 +122,7 @@ class NeteaseSpider(BaseSpider):
         yield comments
 
         priority = response.meta['priority']
-        meta = {'comments_id': comments['id'], 'priority': priority}
+        meta = {'comments_id': comments['id'], 'priority': priority, 'category': article['category']}
         yield Request(comment_url, callback=self.parse_comment, priority=priority, meta=meta)
 
     # 不传递item，而是根据id更新item
@@ -143,6 +151,8 @@ class NeteaseSpider(BaseSpider):
 
             comment['user'] = user
             yield comment
+
+            self._update_stats('netease', response.meta['category'], 'comment')
 
         r = re.search(r'offset=(\d+)&limit=(\d+)', response.url)
         if not r:

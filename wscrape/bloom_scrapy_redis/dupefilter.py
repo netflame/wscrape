@@ -44,9 +44,12 @@ class BloomFilter(RFPDupeFilter):
         if not self.bf_seeds:
             self.bf_k = settings.getint("BLOOM_FILTER_K", defaults.BLOOM_FILTER_K)
             self.bf_seeds = SeedUtil.generate_seeds(self.bf_k)
+        
+        self.bf_check_bits = settings.get("BLOOM_FILTER_CHECK_BITS", defaults.BLOOM_FILTER_CHECK_BITS)
 
         self.bf_m = 1 << self.bf_bits
-        self.bf_ckey = settings.get("BLOOM_FILTER_CHECK_KEY", defaults.BLOOM_FILTER_CHECK_KEY) % {'sdk': self.key}
+        self.bf_check_key = settings.get("BLOOM_FILTER_CHECK_KEY", defaults.BLOOM_FILTER_CHECK_KEY) % {'sdk': self.key}
+        self.bf_check_m = 1 << self.bf_check_bits
 
     def request_seen(self, request):
         fp = self.request_fingerprint(request)
@@ -75,7 +78,7 @@ class BloomFilter(RFPDupeFilter):
         with self.server.pipeline(transaction=False) as p:
             for offset in offsets:
                 p.getbit(self.key, offset)
-            p.getbit(self.bf_ckey, check_offset)
+            p.getbit(self.bf_check_key, check_offset)
             return p.execute()
 
     def mset(self, value):
@@ -84,7 +87,7 @@ class BloomFilter(RFPDupeFilter):
         with self.server.pipeline(transaction=False) as p:
             for offset in offsets:
                 p.setbit(self.key, offset, 1)
-            p.setbit(self.bf_ckey, check_offset, 1)
+            p.setbit(self.bf_check_key, check_offset, 1)
             p.execute()
 
     def get_offsets(self, value):
@@ -99,7 +102,7 @@ class BloomFilter(RFPDupeFilter):
             k 个有序的 offset （有序指置入顺序）
         """
         offsets_str = "".join(map(str, offsets))
-        return self.hash(offsets_str, 31)
+        return self.hash_check(offsets_str)
 
     def hash(self, value, seed):
         h = 0
@@ -107,3 +110,9 @@ class BloomFilter(RFPDupeFilter):
             h += seed * h + ord(value[i])
         h &= self.bf_m - 1
         return h
+
+    def hash_check(self, value):
+        """
+        类似bitmap
+        """
+        return int(value) % self.bf_check_m

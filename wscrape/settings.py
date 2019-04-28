@@ -14,10 +14,6 @@ BOT_NAME = 'wscrapebot'
 SPIDER_MODULES = ['wscrape.spiders']
 NEWSPIDER_MODULE = 'wscrape.spiders'
 
-
-# Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'wscrape (+http://www.yourdomain.com)'
-
 # UserAgent type for fake-useragent
 # UA_TYPE = 'random'
 
@@ -71,12 +67,11 @@ HTTPPROXY_URL_RANDOM = 'http://uproxy:6001/random'
 # stats collector
 DOWNLOADER_STATS = True
 RETRY_ENABLED = True
-MMEUSAGE_ENABLED = True
+MEMUSAGE_ENABLED = True
 DEPTH_STATS_VERBOSE = True
 STATS_CLASS = 'scraprom.PromStatsCollector'
 
-# SCRAPROM_PUSHGATEWAY_URL = '0.0.0.0:9091'
-# SCRAPROM_PUSHGATEWAY_URL = 'pushgateway:9091'
+SCRAPROM_PUSHGATEWAY_URL = 'pushgateway:9091'
 # SCRAPROM_JOB_NAME = ' scrapy'
 # SCRAPROM_PUSH_TIMEOUT = 3
 # SCRAPROM_UPDATE_INTERVAL = 5
